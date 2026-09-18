@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Cadastro de Membro — Monte Moriá</title>
+<meta name="theme-color" content="#f6f4ee">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f4ee;
+    --card:#ffffff;
+    --ink:#23271f;
+    --muted:#6c7266;
+    --line:#e3e0d4;
+    --primary:#3b5f44;
+    --primary-dark:#2a4732;
+    --primary-tint:#e9efe9;
+    --accent:#a9784a;
+    --danger:#b4432f;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow:0 1px 2px rgba(35,39,31,.06), 0 8px 20px -12px rgba(35,39,31,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    min-height:100vh;
+  }
+  h1,h2,h3{
+    font-family:'Lora',Georgia,serif;
+    font-weight:600;
+    line-height:1.25;
+    margin:0 0 6px;
+  }
+  h1{font-size:1.5rem;}
+  h2{font-size:1.25rem;}
+  p{margin:0 0 0;color:var(--muted);line-height:1.5;}
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg);
+  }
+  .topo{
+    position:sticky; top:0; z-index:5;
+    background:var(--bg);
+    padding:14px 20px 10px;
+  }
+  .marca{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .marca span{font-size:.8rem;color:var(--muted);}
+  .progresso{
+    height:4px; background:var(--line); border-radius:99px; overflow:hidden;
+  }
+  .progresso > div{
+    height:100%; background:var(--primary); border-radius:99px;
+    transition:width .35s ease;
+  }
+  main{
+    flex:1;
+    padding:18px 20px 40px;
+  }
+  .etapa-rotulo{
+    font-size:.8rem; color:var(--accent); font-weight:600;
+    margin-bottom:4px;
+  }
+  .secao{margin-bottom:10px;}
+  .campo{margin-bottom:16px;}
+  label{
+    display:block; font-size:.88rem; font-weight:600; margin-bottom:6px; color:var(--ink);
+  }
+  label .opcional{font-weight:400;color:var(--muted);}
+  input[type=text], input[type=email], input[type=tel], select, textarea{
+    width:100%; padding:13px 14px; font-size:1rem; font-family:inherit;
+    border:1.5px solid var(--line); border-radius:var(--radius-sm);
+    background:var(--card); color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-tint);
+  }
+  .campo-data-btn{
+    width:100%; text-align:left; padding:13px 14px; font-size:1rem; font-family:inherit;
+    border:1.5px solid var(--line); border-radius:var(--radius-sm);
+    background:var(--card); color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .campo-data-btn.vazio{color:var(--muted);}
+  .campo-data-btn svg{width:18px;height:18px;stroke:var(--muted);flex-shrink:0;}
+  .ajuda{font-size:.78rem;color:var(--muted);margin-top:5px;}
+  .erro{font-size:.82rem;color:var(--danger);margin-top:5px;font-weight:500;}
+  .cards-grupo{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .cards-grupo.coluna{grid-template-columns:1fr;}
+  .cards-grupo.tres{grid-template-columns:1fr 1fr 1fr;}
+  .card-opcao{
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:15px 12px; min-height:52px;
+    border:1.5px solid var(--line); border-radius:var(--radius-md);
+    background:var(--card); color:var(--ink); font-size:.95rem; font-weight:500;
+    cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .card-opcao.selecionada{
+    border-color:var(--primary); background:var(--primary-tint); color:var(--primary-dark); font-weight:600;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    padding:10px 14px; border:1.5px solid var(--line); border-radius:99px;
+    background:var(--card); font-size:.88rem; font-weight:500; cursor:pointer;
+  }
+  .chip.selecionada{border-color:var(--primary); background:var(--primary); color:#fff;}
+  .cartao{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius-lg);
+    padding:18px; box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .cartao-titulo{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .cartao-titulo button.remover{
+    border:none;background:none;color:var(--danger);font-size:.85rem;font-weight:600;cursor:pointer;padding:4px;
+  }
+  .btn{
+    display:block; width:100%; padding:15px; font-size:1rem; font-weight:600;
+    border-radius:var(--radius-md); border:1.5px solid transparent; cursor:pointer;
+    font-family:inherit;
+  }
+  .btn-primario{background:var(--primary); color:#fff;}
+  .btn-primario:disabled{background:#a9b7ac; cursor:not-allowed;}
+  .btn-secundario{background:var(--card); color:var(--ink); border-color:var(--line);}
+  .btn-texto{background:none; border:none; color:var(--primary); font-weight:600; padding:10px 0; cursor:pointer; font-family:inherit; font-size:.95rem;}
+  /* Navegação em fluxo normal (não fixa) — evita cobrir campos quando o teclado abre */
+  .nav-botoes{display:flex; gap:10px; margin-top:24px;}
+  .nav-botoes .btn-secundario{flex:0 0 96px;}
+  .nav-botoes .btn-primario{flex:1;}
+  .revisao-secao{margin-bottom:6px;}
+  .revisao-secao h3{font-size:1rem;}
+  .revisao-secao .editar{font-size:.85rem;color:var(--primary);font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;}
+  .revisao-linha{font-size:.92rem;padding:6px 0;color:var(--ink);border-bottom:1px solid var(--line);}
+  .revisao-linha:last-child{border-bottom:none;}
+  .revisao-linha .rot{color:var(--muted);}
+  .foto-area{
+    border:1.5px dashed var(--line); border-radius:var(--radius-lg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:30px 16px; background:var(--card); text-align:center; margin-bottom:16px;
+  }
+  .foto-preview{width:170px;height:170px;border-radius:50%;object-fit:cover;margin-bottom:16px;border:3px solid var(--primary-tint);}
+  .foto-botoes{display:flex; gap:10px; width:100%;}
+  .foto-botoes .btn{flex:1;}
+  .centro{text-align:center;}
+  .tela-abertura, .tela-sucesso{
+    min-height:calc(100vh - 20px); display:flex; flex-direction:column; justify-content:center; align-items:center;
+    text-align:center; padding:20px;
+  }
+  .selo{
+    width:64px;height:64px;border-radius:50%;background:var(--primary-tint);
+    display:flex;align-items:center;justify-content:center;margin-bottom:22px;
+  }
+  .selo svg{width:28px;height:28px;stroke:var(--primary);}
+
+  /* Seletor de data em 3 passos */
+  .dp-overlay{
+    position:fixed; inset:0; background:rgba(35,39,31,.45); z-index:50;
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  .dp-painel{
+    width:100%; max-width:480px; background:var(--bg);
+    border-radius:22px 22px 0 0; padding:16px 20px 26px;
+    max-height:82vh; display:flex; flex-direction:column;
+  }
+  .dp-cabecalho{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .dp-cabecalho button{background:none;border:none;font-size:1.4rem;color:var(--muted);cursor:pointer;padding:4px 8px;}
+  .dp-titulo{font-family:'Lora',serif;font-weight:600;font-size:1.05rem;}
+  .dp-corpo{overflow-y:auto;}
+  .dp-lista-anos{display:flex; flex-direction:column; gap:2px;}
+  .dp-ano-item{
+    padding:14px 10px; text-align:center; border-radius:var(--radius-sm); cursor:pointer; font-size:1rem;
+  }
+  .dp-ano-item:hover, .dp-ano-item:active{background:var(--primary-tint);}
+  .dp-grade-meses{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  .dp-mes-item{
+    padding:16px 8px; text-align:center; border-radius:var(--radius-md); cursor:pointer;
+    background:var(--card); border:1.5px solid var(--line); font-weight:500;
+  }
+  .dp-mes-item:hover, .dp-mes-item:active{border-color:var(--primary); background:var(--primary-tint);}
+  .dp-grade-dias{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .dp-dia-item{
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+    border-radius:50%; cursor:pointer; font-size:.92rem; background:var(--card); border:1.5px solid var(--line);
+  }
+  .dp-dia-item:hover, .dp-dia-item:active{border-color:var(--primary); background:var(--primary-tint);}
+  .dp-dia-item.desabilitado{opacity:.3; pointer-events:none;}
+
+  @media (min-width:520px){
+    #app{border-left:1px solid var(--line); border-right:1px solid var(--line);}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDUe6HCegwPI9gAShbr6dPatyMU7GR4Xug",
+  authDomain: "cadastro-moria.firebaseapp.com",
+  projectId: "cadastro-moria",
+  storageBucket: "cadastro-moria.firebasestorage.app",
+  messagingSenderId: "476978914755",
+  appId: "1:476978914755:web:2158b2e578ad25f6230976"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+(function(){
+"use strict";
+
+/* =========================================================================
+   CONFIGURAÇÃO — único lugar do projeto onde estas listas existem.
+   ========================================================================= */
+const classesEbd = [
+  {chave:"infantil", rotulo:"Infantil"},
+  {chave:"jovens", rotulo:"Jovens"},
+  {chave:"adultos", rotulo:"Adultos"},
+];
+const departamentosCfg = [
+  {chave:"circulo_oracao", rotulo:"Círculo de Oração"},
+  {chave:"jovens", rotulo:"Jovens"},
+  {chave:"louvor", rotulo:"Louvor"},
+  {chave:"infantil", rotulo:"Infantil"},
+  {chave:"missoes", rotulo:"Missões"},
+  {chave:"ebd", rotulo:"EBD"},
+  {chave:"midia", rotulo:"Mídia/Comunicação"},
+  {chave:"familia", rotulo:"Família"},
+];
+const cargosCfg = [
+  {chave:"nenhum", rotulo:"Nenhum"},
+  {chave:"cooperador", rotulo:"Cooperador"},
+  {chave:"diacono", rotulo:"Diácono"},
+  {chave:"diaconisa", rotulo:"Diaconisa"},
+  {chave:"presbitero", rotulo:"Presbítero"},
+  {chave:"evangelista", rotulo:"Evangelista"},
+  {chave:"pastor", rotulo:"Pastor"},
+  {chave:"missionario", rotulo:"Missionário(a)"},
+];
+const estadosCivisCfg = [
+  {chave:"solteiro", rotulo:"Solteiro(a)"},
+  {chave:"casado", rotulo:"Casado(a)"},
+  {chave:"viuvo", rotulo:"Viúvo(a)"},
+  {chave:"divorciado", rotulo:"Divorciado(a)"},
+];
+const ufsCfg = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const MESES_PT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+/* =========================================================================
+   VALIDAÇÃO — máscara e validação centralizadas.
+   ========================================================================= */
+function apenasDigitos(v){ return (v||"").replace(/\D/g,""); }
+function formatarCpf(v){
+  const d = apenasDigitos(v).slice(0,11);
+  return d.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+}
+function validarCpf(v){
+  const cpf = apenasDigitos(v);
+  if(cpf.length!==11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  const calc = (base) => {
+    let soma=0;
+    for(let i=0;i<base.length;i++) soma += Number(base[i]) * (base.length+1-i);
+    const resto = (soma*10) % 11;
+    return resto===10 ? 0 : resto;
+  };
+  return calc(cpf.slice(0,9))===Number(cpf[9]) && calc(cpf.slice(0,10))===Number(cpf[10]);
+}
+function formatarTelefone(v){
+  const d = apenasDigitos(v).slice(0,11);
+  if(d.length<=10) return d.replace(/(\d{2})(\d)/,"($1) $2").replace(/(\d{4})(\d{1,4})$/,"$1-$2");
+  return d.replace(/(\d{2})(\d)/,"($1) $2").replace(/(\d{5})(\d{1,4})$/,"$1-$2");
+}
+function validarTelefone(v){ const d=apenasDigitos(v); return d.length===10||d.length===11; }
+function formatarCep(v){ const d=apenasDigitos(v).slice(0,8); return d.replace(/(\d{5})(\d{1,3})$/,"$1-$2"); }
+function validarCep(v){ return apenasDigitos(v).length===8; }
+function obrigatorio(v){ return v!==null && v!==undefined && String(v).trim().length>0; }
+
+/* =========================================================================
+   DOMÍNIO — Padrão Oficial de Dados Agenda Monte Moriá V1.0 (refatorado)
+   ========================================================================= */
+function gerarId(){
+  if(typeof crypto!=="undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{
+    const r=(Math.random()*16)|0, v=c==="x"?r:(r&0x3)|0x8; return v.toString(16);
+  });
+}
+function gerarCodigoExibicao(id){ return "MM-" + id.replace(/-/g,"").slice(0,6).toUpperCase(); }
+function criarCadastroVazio(){
+  const id = gerarId();
+  return {
+    schema_version:"1.1",
+    tipo_arquivo:"membro",
+    sistema:"Agenda Monte Moriá",
+    id,
+    codigo_exibicao: gerarCodigoExibicao(id),
+    membro:{
+      nome_completo:"", data_nascimento:"", sexo:null,
+      cpf:"", rg:null, estado_civil:null, nome_conjuge:null,
+      telefone:"", email:null,
+      endereco:{cep:"",logradouro:"",numero:"",complemento:null,bairro:"",cidade:"",uf:""},
+      filhos:[],
+      status:null,
+      data_inicio_congregacao:null, data_inicio_congregacao_precisao:"desconhecida",
+      batizado_nas_aguas:null, data_batismo:null,
+      participa_ebd:false, classe_ebd:null,
+      cargo_eclesiastico:"nenhum",
+      departamentos:[]
+    },
+    foto:null
+  };
+}
+function paraEnvioFirestore(c){
+  const {schema_version,tipo_arquivo,sistema,id,codigo_exibicao,membro,foto} = c;
+  return {schema_version,tipo_arquivo,sistema,id,codigo_exibicao,membro,foto};
+}
+
+/* =========================================================================
+   ESTADO
+   ========================================================================= */
+const state = {
+  etapa: 0,
+  cadastro: criarCadastroVazio(),
+  ui: { possuiFilhos:false, erro:"" },
+  fotoDataUrl: null,
+  nomeArquivoGerado: "",
+  datePicker: { ativo:false, campo:null, sub:1, ano:null, mes:null }
+};
+const TOTAL_ETAPAS = 8; // 1 Dados pessoais+família · 2 Contato · 3 Endereço · 4 Vida eclesiástica · 5 EBD · 6 Cargo/Departamentos · 7 Foto · 8 Revisão
+
+function getPath(obj, path){ return path.split(".").reduce((o,k)=> (o==null?undefined:o[k]), obj); }
+function setPath(obj, path, value){
+  const keys = path.split(".");
+  let o = obj;
+  for(let i=0;i<keys.length-1;i++) o = o[keys[i]];
+  o[keys[keys.length-1]] = value;
+}
+function rotulo(lista, chave){ const it = lista.find(o=>o.chave===chave); return it?it.rotulo:(chave||"—"); }
+function dataIsoParaBr(iso){ return iso ? iso.split("-").reverse().join("/") : ""; }
+
+/* =========================================================================
+   COMPONENTES DE RENDER (HTML como string)
+   ========================================================================= */
+function grupoCards(path, opcoes, valorAtual, coluna){
+  return `<div class="cards-grupo ${coluna?'coluna':''}">` + opcoes.map(o=>
+    `<div class="card-opcao ${valorAtual===o.chave?'selecionada':''}" data-acao="selecionar" data-campo="${path}" data-valor="${o.chave}">${o.rotulo}</div>`
+  ).join("") + `</div>`;
+}
+function grupoChips(path, opcoes, valoresAtuais){
+  return `<div class="chips">` + opcoes.map(o=>
+    `<div class="chip ${valoresAtuais.includes(o.chave)?'selecionada':''}" data-acao="alternar" data-campo="${path}" data-valor="${o.chave}">${o.rotulo}</div>`
+  ).join("") + `</div>`;
+}
+function campoTexto(rotuloTxt, path, valor, opts){
+  opts = opts || {};
+  const tipo = opts.tipo || "text";
+  return `
+  <div class="campo">
+    <label>${rotuloTxt} ${opts.opcional?'<span class="opcional">(opcional)</span>':''}</label>
+    <input type="${tipo}" data-campo="${path}" data-formato="${opts.formato||''}" value="${valor||''}" placeholder="${opts.placeholder||''}" ${opts.inputmode?`inputmode="${opts.inputmode}"`:''} maxlength="${opts.maxlength||'200'}">
+    ${opts.ajuda?`<div class="ajuda">${opts.ajuda}</div>`:''}
+  </div>`;
+}
+/* Campo de data — abre o seletor visual em 3 passos (ano → mês → dia) em vez do input nativo. */
+function campoDataCustom(rotuloTxt, path, valorIso, opcional){
+  const vazio = !valorIso;
+  return `
+  <div class="campo">
+    <label>${rotuloTxt} ${opcional?'<span class="opcional">(opcional)</span>':''}</label>
+    <button type="button" class="campo-data-btn ${vazio?'vazio':''}" data-acao="abrir-data" data-campo="${path}">
+      <span>${vazio ? "Selecionar data" : dataIsoParaBr(valorIso)}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    </button>
+  </div>`;
+}
+function campoSelect(rotuloTxt, path, opcoesSimples, valor){
+  return `
+  <div class="campo">
+    <label>${rotuloTxt}</label>
+    <select data-campo="${path}">
+      <option value="">Selecione</option>
+      ${opcoesSimples.map(u=>`<option value="${u}" ${valor===u?'selected':''}>${u}</option>`).join("")}
+    </select>
+  </div>`;
+}
+
+/* =========================================================================
+   ETAPAS
+   ========================================================================= */
+function telaAbertura(){
+  return `
+  <div class="tela-abertura">
+    <div class="selo"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-7h6v7"/></svg></div>
+    <h1>Cadastro de Membro</h1>
+    <p>Preencha seus dados para atualizar seu cadastro e solicitar sua carteirinha de membro da Congregação Monte Moriá.</p>
+    <div style="height:28px"></div>
+    <button class="btn btn-primario" style="max-width:280px" data-acao="ir" data-etapa="1">Começar</button>
+  </div>`;
+}
+
+/* Etapa 1 — Dados pessoais + Família (filhos) */
+function etapa1_DadosPessoais(m){
+  const filhosHtml = state.ui.possuiFilhos ? `
+    ${m.filhos.map((f,i)=>`
+      <div class="cartao">
+        <div class="cartao-titulo">
+          <strong>Filho ${i+1}</strong>
+          <button class="remover" data-acao="remover-filho" data-indice="${i}">Remover</button>
+        </div>
+        ${campoTexto("Nome completo", `membro.filhos.${i}.nome_completo`, f.nome_completo)}
+        ${campoDataCustom("Data de nascimento", `membro.filhos.${i}.data_nascimento`, f.data_nascimento)}
+      </div>
+    `).join("")}
+    <button class="btn-texto" data-acao="adicionar-filho">+ Adicionar outro filho</button>
+  ` : "";
+
+  return `
+    <div class="etapa-rotulo">Etapa 1 de ${TOTAL_ETAPAS}</div>
+    <h2>Dados pessoais</h2>
+    <div class="secao">
+      ${campoTexto("Nome completo", "membro.nome_completo", m.nome_completo)}
+      ${campoDataCustom("Data de nascimento", "membro.data_nascimento", m.data_nascimento)}
+      <div class="campo">
+        <label>Sexo</label>
+        ${grupoCards("membro.sexo", [{chave:"masculino",rotulo:"Masculino"},{chave:"feminino",rotulo:"Feminino"}], m.sexo)}
+      </div>
+      ${campoTexto("CPF", "membro.cpf", m.cpf?formatarCpf(m.cpf):"", {formato:"cpf", placeholder:"000.000.000-00", inputmode:"numeric", maxlength:14})}
+      ${campoTexto("RG", "membro.rg", m.rg, {opcional:true})}
+      <div class="campo">
+        <label>Estado civil</label>
+        ${grupoCards("membro.estado_civil", estadosCivisCfg, m.estado_civil)}
+      </div>
+      ${m.estado_civil==="casado" ? campoTexto("Nome do cônjuge", "membro.nome_conjuge", m.nome_conjuge) : ""}
+    </div>
+    <div class="secao">
+      <h2 style="font-size:1.05rem">Família</h2>
+      <div class="campo">
+        <label>Possui filhos?</label>
+        <div class="cards-grupo">
+          <div class="card-opcao ${state.ui.possuiFilhos?'selecionada':''}" data-acao="possui-filhos" data-valor="sim">Sim</div>
+          <div class="card-opcao ${!state.ui.possuiFilhos?'selecionada':''}" data-acao="possui-filhos" data-valor="nao">Não</div>
+        </div>
+      </div>
+      ${filhosHtml}
+    </div>`;
+}
+
+function etapa2_Contato(m){
+  return `
+    <div class="etapa-rotulo">Etapa 2 de ${TOTAL_ETAPAS}</div>
+    <h2>Contato</h2>
+    <div class="secao">
+      ${campoTexto("Celular / WhatsApp", "membro.telefone", m.telefone?formatarTelefone(m.telefone):"", {formato:"telefone", placeholder:"(41) 99999-9999", inputmode:"numeric", maxlength:16})}
+      ${campoTexto("E-mail", "membro.email", m.email, {tipo:"email", opcional:true})}
+    </div>`;
+}
+
+function etapa3_Endereco(m){
+  const e = m.endereco;
+  return `
+    <div class="etapa-rotulo">Etapa 3 de ${TOTAL_ETAPAS}</div>
+    <h2>Endereço</h2>
+    <div class="secao">
+      ${campoTexto("CEP", "membro.endereco.cep", e.cep?formatarCep(e.cep):"", {formato:"cep", placeholder:"00000-000", inputmode:"numeric", maxlength:9})}
+      <div id="cep-status" class="ajuda"></div>
+      ${campoTexto("Rua / Logradouro", "membro.endereco.logradouro", e.logradouro)}
+      ${campoTexto("Número", "membro.endereco.numero", e.numero, {inputmode:"numeric"})}
+      ${campoTexto("Complemento", "membro.endereco.complemento", e.complemento, {opcional:true})}
+      ${campoTexto("Bairro", "membro.endereco.bairro", e.bairro)}
+      ${campoTexto("Cidade", "membro.endereco.cidade", e.cidade)}
+      ${campoSelect("Estado (UF)", "membro.endereco.uf", ufsCfg, e.uf)}
+    </div>`;
+}
+
+/* Etapa 4 — Vida eclesiástica (sem a seção "veio de outra igreja") */
+function etapa4_VidaEclesiastica(m){
+  const precisaoOpcoes = [{chave:"exata",rotulo:"Exata"},{chave:"aproximada",rotulo:"Aproximada"},{chave:"desconhecida",rotulo:"Não sei"}];
+  const simNaoNaoSei = [{chave:"sim",rotulo:"Sim"},{chave:"nao",rotulo:"Não"},{chave:"nao_sei",rotulo:"Não sei / não lembro"}];
+  return `
+    <div class="etapa-rotulo">Etapa 4 de ${TOTAL_ETAPAS}</div>
+    <h2>Vida eclesiástica</h2>
+    <div class="secao">
+      <div class="campo">
+        <label>Status</label>
+        ${grupoCards("membro.status", [{chave:"membro",rotulo:"Membro"},{chave:"congregado",rotulo:"Congregado"}], m.status)}
+      </div>
+      <div class="campo">
+        <label>Quando começou a congregar no Monte Moriá?</label>
+        ${grupoCards("membro.data_inicio_congregacao_precisao", precisaoOpcoes, m.data_inicio_congregacao_precisao, true)}
+      </div>
+      ${m.data_inicio_congregacao_precisao!=="desconhecida" ? campoDataCustom("Data aproximada ou exata", "membro.data_inicio_congregacao", m.data_inicio_congregacao) : ""}
+
+      <div class="campo">
+        <label>É batizado nas águas?</label>
+        ${grupoCards("membro.batizado_nas_aguas", simNaoNaoSei, m.batizado_nas_aguas, true)}
+      </div>
+      ${m.batizado_nas_aguas==="sim" ? campoDataCustom("Data do batismo", "membro.data_batismo", m.data_batismo) : ""}
+    </div>`;
+}
+
+function etapa5_EBD(m){
+  return `
+    <div class="etapa-rotulo">Etapa 5 de ${TOTAL_ETAPAS}</div>
+    <h2>Escola Bíblica Dominical</h2>
+    <div class="secao">
+      <div class="campo">
+        <label>Participa da Escola Bíblica Dominical?</label>
+        <div class="cards-grupo">
+          <div class="card-opcao ${m.participa_ebd?'selecionada':''}" data-acao="ebd-participa" data-valor="sim">Sim</div>
+          <div class="card-opcao ${!m.participa_ebd?'selecionada':''}" data-acao="ebd-participa" data-valor="nao">Não</div>
+        </div>
+      </div>
+      ${m.participa_ebd ? `
+        <div class="campo">
+          <label>Classe</label>
+          ${grupoCards("membro.classe_ebd", classesEbd, m.classe_ebd, true)}
+        </div>
+      ` : ""}
+    </div>`;
+}
+
+/* Etapa 6 — Cargo e Departamentos (sem "Gostaria de servir") */
+function etapa6_CargoDepartamentos(m){
+  return `
+    <div class="etapa-rotulo">Etapa 6 de ${TOTAL_ETAPAS}</div>
+    <h2>Cargo e departamentos</h2>
+    <div class="secao">
+      <div class="campo">
+        <label>Cargo / função eclesiástica</label>
+        ${grupoCards("membro.cargo_eclesiastico", cargosCfg, m.cargo_eclesiastico)}
+      </div>
+      <div class="campo">
+        <label>Departamentos dos quais participa atualmente</label>
+        ${grupoChips("membro.departamentos", departamentosCfg, m.departamentos)}
+      </div>
+    </div>`;
+}
+
+function etapa7_Foto(){
+  if(state.fotoDataUrl){
+    return `
+      <div class="etapa-rotulo">Etapa 7 de ${TOTAL_ETAPAS}</div>
+      <h2>Foto</h2>
+      <div class="secao centro">
+        <div class="foto-area">
+          <img class="foto-preview" src="${state.fotoDataUrl}" alt="Prévia da foto">
+          <div class="foto-botoes">
+            <button class="btn btn-secundario" data-acao="foto-refazer">Tirar outra</button>
+            <button class="btn btn-secundario" data-acao="foto-trocar">Escolher outra</button>
+          </div>
+        </div>
+        <p class="ajuda">Rosto de frente, bem iluminado e sem filtros — essa foto será usada na carteirinha.</p>
+      </div>`;
+  }
+  return `
+    <div class="etapa-rotulo">Etapa 7 de ${TOTAL_ETAPAS}</div>
+    <h2>Foto</h2>
+    <div class="secao">
+      <div class="foto-area">
+        <p style="margin-bottom:16px">Sua foto será usada para emitir a carteirinha de membro. Escolha uma foto com o rosto visível, de frente e bem iluminada.</p>
+        <div class="foto-botoes">
+          <button class="btn btn-primario" data-acao="foto-abrir-camera">Tirar foto</button>
+          <button class="btn btn-secundario" data-acao="foto-abrir-galeria">Galeria</button>
+        </div>
+      </div>
+      <input type="file" id="input-camera" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="input-galeria" accept="image/*" style="display:none">
+    </div>`;
+}
+
+function etapa8_Revisao(c){
+  const m = c.membro;
+  const linha = (label, val) => `<div class="revisao-linha"><span class="rot">${label}:</span> ${val||"—"}</div>`;
+  return `
+    <div class="etapa-rotulo">Etapa 8 de ${TOTAL_ETAPAS}</div>
+    <h2>Revisão</h2>
+    <div class="secao">
+      <div class="cartao">
+        <div class="revisao-secao"><h3>Dados pessoais</h3><button class="editar" data-acao="ir" data-etapa="1">Editar</button></div>
+        ${linha("Nome", m.nome_completo)}
+        ${linha("Nascimento", dataIsoParaBr(m.data_nascimento))}
+        ${linha("Sexo", m.sexo==="masculino"?"Masculino":m.sexo==="feminino"?"Feminino":"")}
+        ${linha("Estado civil", rotulo(estadosCivisCfg, m.estado_civil))}
+        ${linha("CPF", m.cpf?formatarCpf(m.cpf):"")}
+        ${linha("Filhos", m.filhos.length ? m.filhos.map(f=>f.nome_completo).join(", ") : "Nenhum")}
+      </div>
+      <div class="cartao">
+        <div class="revisao-secao"><h3>Contato</h3><button class="editar" data-acao="ir" data-etapa="2">Editar</button></div>
+        ${linha("Telefone", m.telefone?formatarTelefone(m.telefone):"")}
+        ${linha("E-mail", m.email)}
+      </div>
+      <div class="cartao">
+        <div class="revisao-secao"><h3>Endereço</h3><button class="editar" data-acao="ir" data-etapa="3">Editar</button></div>
+        ${linha("Endereço", [m.endereco.logradouro, m.endereco.numero].filter(Boolean).join(", "))}
+        ${linha("Cidade/UF", [m.endereco.cidade, m.endereco.uf].filter(Boolean).join(" / "))}
+      </div>
+      <div class="cartao">
+        <div class="revisao-secao"><h3>Vida eclesiástica</h3><button class="editar" data-acao="ir" data-etapa="4">Editar</button></div>
+        ${linha("Status", m.status==="membro"?"Membro":m.status==="congregado"?"Congregado":"")}
+        ${linha("Batizado", m.batizado_nas_aguas)}
+      </div>
+      <div class="cartao">
+        <div class="revisao-secao"><h3>EBD</h3><button class="editar" data-acao="ir" data-etapa="5">Editar</button></div>
+        ${linha("Participa", m.participa_ebd?"Sim":"Não")}
+        ${m.participa_ebd ? linha("Classe", rotulo(classesEbd, m.classe_ebd)) : ""}
+      </div>
+      <div class="cartao">
+        <div class="revisao-secao"><h3>Cargo / departamentos</h3><button class="editar" data-acao="ir" data-etapa="6">Editar</button></div>
+        ${linha("Cargo", rotulo(cargosCfg, m.cargo_eclesiastico))}
+        ${linha("Departamentos", m.departamentos.map(d=>rotulo(departamentosCfg,d)).join(", "))}
+      </div>
+      <div class="cartao">
+        <div class="revisao-secao"><h3>Foto</h3><button class="editar" data-acao="ir" data-etapa="7">Editar</button></div>
+        ${state.fotoDataUrl ? `<img src="${state.fotoDataUrl}" style="width:70px;height:70px;border-radius:50%;object-fit:cover">` : linha("Foto","Não adicionada")}
+      </div>
+    </div>`;
+}
+
+function telaSucesso(){
+  return `
+  <div class="tela-sucesso">
+    <div class="selo"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <h1>Cadastro concluído</h1>
+    <p>Seus dados foram enviados com sucesso para a Congregação Monte Moriá. A administração receberá seu cadastro automaticamente.</p>
+    ${state.nomeArquivoGerado ? `<p style="margin-top:12px;font-size:.85rem">Código: <strong>${state.cadastro.codigo_exibicao}</strong></p>` : ""}
+  </div>`;
+}
+
+/* =========================================================================
+   SELETOR DE DATA EM 3 PASSOS (Ano → Mês → Dia)
+   ========================================================================= */
+function abrirDatePicker(campo){
+  const atual = getPath(state.cadastro, campo);
+  let ano=null, mes=null;
+  if(atual){ const [a,m] = atual.split("-"); ano=Number(a); mes=Number(m); }
+  state.datePicker = {ativo:true, campo, sub: atual?3:1, ano, mes};
+  render();
+}
+function fecharDatePicker(){ state.datePicker = {ativo:false, campo:null, sub:1, ano:null, mes:null}; render(); }
+
+function renderDatePickerModal(){
+  const dp = state.datePicker;
+  if(!dp.ativo) return "";
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+
+  let titulo = "Selecione o ano";
+  let corpo = "";
+
+  if(dp.sub===1){
+    const anos = [];
+    for(let y=anoAtual; y>=anoAtual-100; y--) anos.push(y);
+    corpo = `<div class="dp-lista-anos">${anos.map(y=>`<div class="dp-ano-item" data-acao="dp-ano" data-valor="${y}">${y}</div>`).join("")}</div>`;
+  } else if(dp.sub===2){
+    titulo = "Selecione o mês";
+    corpo = `<div class="dp-grade-meses">${MESES_PT.map((nome,i)=>{
+      const m = i+1;
+      const desabilitado = dp.ano===anoAtual && m > (hoje.getMonth()+1);
+      return `<div class="dp-mes-item ${desabilitado?'desabilitado':''}" ${desabilitado?'':`data-acao="dp-mes" data-valor="${m}"`}>${nome}</div>`;
+    }).join("")}</div>`;
+  } else if(dp.sub===3){
+    titulo = "Selecione o dia";
+    const diasNoMes = new Date(dp.ano, dp.mes, 0).getDate();
+    const dias = [];
+    for(let d=1; d<=diasNoMes; d++) dias.push(d);
+    corpo = `<div class="dp-grade-dias">${dias.map(d=>{
+      const dataCandidata = new Date(dp.ano, dp.mes-1, d);
+      const desabilitado = dataCandidata > hoje;
+      return `<div class="dp-dia-item ${desabilitado?'desabilitado':''}" ${desabilitado?'':`data-acao="dp-dia" data-valor="${d}"`}>${d}</div>`;
+    }).join("")}</div>`;
+  }
+
+  return `
+  <div class="dp-overlay" data-acao="dp-overlay-fundo">
+    <div class="dp-painel">
+      <div class="dp-cabecalho">
+        ${dp.sub>1 ? `<button data-acao="dp-voltar" aria-label="Voltar">‹</button>` : `<span style="width:32px"></span>`}
+        <span class="dp-titulo">${titulo}</span>
+        <button data-acao="dp-fechar" aria-label="Fechar">×</button>
+      </div>
+      <div class="dp-corpo">${corpo}</div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================================
+   VALIDAÇÃO POR ETAPA
+   ========================================================================= */
+function validarEtapa(etapa){
+  const m = state.cadastro.membro;
+  switch(etapa){
+    case 1:
+      if(!obrigatorio(m.nome_completo)) return "Informe o nome completo.";
+      if(!obrigatorio(m.data_nascimento)) return "Informe a data de nascimento.";
+      if(!m.sexo) return "Selecione o sexo.";
+      if(!validarCpf(m.cpf)) return "Informe um CPF válido.";
+      if(!m.estado_civil) return "Selecione o estado civil.";
+      if(m.estado_civil==="casado" && !obrigatorio(m.nome_conjuge)) return "Informe o nome do cônjuge.";
+      if(state.ui.possuiFilhos){
+        for(const f of m.filhos){
+          if(!obrigatorio(f.nome_completo) || !obrigatorio(f.data_nascimento)) return "Preencha nome e data de nascimento de todos os filhos.";
+        }
+      }
+      return null;
+    case 2:
+      if(!validarTelefone(m.telefone)) return "Informe um celular válido com DDD.";
+      return null;
+    case 3:
+      if(!validarCep(m.endereco.cep)) return "CEP inválido.";
+      if(!obrigatorio(m.endereco.logradouro)) return "Informe a rua/logradouro.";
+      if(!obrigatorio(m.endereco.numero)) return "Informe o número.";
+      if(!obrigatorio(m.endereco.bairro)) return "Informe o bairro.";
+      if(!obrigatorio(m.endereco.cidade)) return "Informe a cidade.";
+      if(!obrigatorio(m.endereco.uf)) return "Selecione o estado.";
+      return null;
+    case 4:
+      if(!m.status) return "Selecione se é membro ou congregado.";
+      if(m.data_inicio_congregacao_precisao!=="desconhecida" && !obrigatorio(m.data_inicio_congregacao)) return "Informe a data de início na congregação.";
+      if(!m.batizado_nas_aguas) return "Informe se é batizado nas águas.";
+      if(m.batizado_nas_aguas==="sim" && !obrigatorio(m.data_batismo)) return "Informe a data do batismo.";
+      return null;
+    case 5:
+      if(m.participa_ebd && !m.classe_ebd) return "Selecione a classe da EBD.";
+      return null;
+    case 7:
+      if(!state.fotoDataUrl) return "Adicione uma foto para continuar.";
+      return null;
+    default:
+      return null;
+  }
+}
+
+/* =========================================================================
+   RENDER PRINCIPAL
+   ========================================================================= */
+function render(){
+  const app = document.getElementById("app");
+  const c = state.cadastro;
+  let corpo = "";
+  let mostrarNav = true;
+  let mostrarProgresso = true;
+
+  switch(state.etapa){
+    case 0: corpo = telaAbertura(); mostrarNav=false; mostrarProgresso=false; break;
+    case 1: corpo = etapa1_DadosPessoais(c.membro); break;
+    case 2: corpo = etapa2_Contato(c.membro); break;
+    case 3: corpo = etapa3_Endereco(c.membro); break;
+    case 4: corpo = etapa4_VidaEclesiastica(c.membro); break;
+    case 5: corpo = etapa5_EBD(c.membro); break;
+    case 6: corpo = etapa6_CargoDepartamentos(c.membro); break;
+    case 7: corpo = etapa7_Foto(); break;
+    case 8: corpo = etapa8_Revisao(c); break;
+    case 9: corpo = telaSucesso(); mostrarNav=false; mostrarProgresso=false; break;
+  }
+
+  const pct = state.etapa>=1 && state.etapa<=TOTAL_ETAPAS ? Math.round((state.etapa/TOTAL_ETAPAS)*100) : (state.etapa>TOTAL_ETAPAS?100:0);
+
+  const navHtml = mostrarNav ? `
+    <div class="nav-botoes">
+      ${state.etapa>1 ? `<button class="btn btn-secundario" data-acao="voltar">Voltar</button>` : `<div></div>`}
+      <button class="btn btn-primario" data-acao="${state.etapa===TOTAL_ETAPAS?'enviar':'continuar'}">${state.etapa===TOTAL_ETAPAS?'Enviar cadastro':'Continuar'}</button>
+    </div>` : "";
+
+  app.innerHTML = `
+    ${mostrarProgresso ? `
+    <div class="topo">
+      <div class="marca"><strong>Monte Moriá</strong><span>${state.cadastro.codigo_exibicao}</span></div>
+      <div class="progresso"><div style="width:${pct}%"></div></div>
+    </div>` : ""}
+    <main>
+      ${corpo}
+      ${state.ui.erro ? `<div class="erro">${state.ui.erro}</div>` : ""}
+      ${navHtml}
+    </main>
+    ${renderDatePickerModal()}
+  `;
+
+  if(state.etapa===3){
+    const cepInput = app.querySelector('[data-campo="membro.endereco.cep"]');
+    if(cepInput) cepInput.addEventListener("blur", buscarCep);
+  }
+  if(state.etapa===7 && !state.fotoDataUrl){
+    document.getElementById("input-camera").addEventListener("change", processarFoto);
+    document.getElementById("input-galeria").addEventListener("change", processarFoto);
+  }
+}
+
+/* =========================================================================
+   BUSCA DE CEP (ViaCEP) — melhora a UX, mas nunca bloqueia o preenchimento manual
+   ========================================================================= */
+function buscarCep(ev){
+  const cep = apenasDigitos(ev.target.value);
+  if(cep.length!==8) return;
+  const statusEl = document.getElementById("cep-status");
+  if(statusEl) statusEl.textContent = "Buscando endereço...";
+  fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(r=>r.json())
+    .then(dados=>{
+      if(dados.erro) throw new Error("CEP não encontrado");
+      const e = state.cadastro.membro.endereco;
+      e.logradouro = dados.logradouro || e.logradouro;
+      e.bairro = dados.bairro || e.bairro;
+      e.cidade = dados.localidade || e.cidade;
+      e.uf = dados.uf || e.uf;
+      render();
+    })
+    .catch(()=>{ if(statusEl) statusEl.textContent = "Não encontramos o endereço — preencha manualmente."; });
+}
+
+/* =========================================================================
+   FOTO — captura, prévia e compressão antes do upload
+   ========================================================================= */
+function processarFoto(ev){
+  const arquivo = ev.target.files && ev.target.files[0];
+  if(!arquivo) return;
+  const leitor = new FileReader();
+  leitor.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const MAX = 900;
+      let {width, height} = img;
+      if(width>height && width>MAX){ height = Math.round(height*(MAX/width)); width = MAX; }
+      else if(height>=width && height>MAX){ width = Math.round(width*(MAX/height)); height = MAX; }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      state.fotoDataUrl = dataUrl;
+      state.cadastro.foto = { presente:true, formato:"jpg", largura:width, altura:height };
+      render();
+    };
+    img.src = e.target.result;
+  };
+  leitor.readAsDataURL(arquivo);
+}
+
+/* =========================================================================
+   AÇÕES (delegação de eventos)
+   ========================================================================= */
+document.addEventListener("click", function(ev){
+  const alvo = ev.target.closest("[data-acao]");
+  if(!alvo) return;
+  const acao = alvo.dataset.acao;
+
+  if(acao==="ir"){ state.etapa = Number(alvo.dataset.etapa); state.ui.erro=""; render(); window.scrollTo(0,0); return; }
+  if(acao==="voltar"){ state.etapa -= 1; state.ui.erro=""; render(); window.scrollTo(0,0); return; }
+  if(acao==="continuar"){
+    const erro = validarEtapa(state.etapa);
+    if(erro){ state.ui.erro = erro; render(); return; }
+    state.ui.erro = "";
+    state.etapa += 1;
+    render(); window.scrollTo(0,0);
+    return;
+  }
+  if(acao==="enviar"){ enviarCadastro(); return; }
+
+  if(acao==="selecionar"){
+    setPath(state.cadastro, alvo.dataset.campo, alvo.dataset.valor);
+    if(alvo.dataset.campo==="membro.data_inicio_congregacao_precisao" && alvo.dataset.valor==="desconhecida"){
+      state.cadastro.membro.data_inicio_congregacao = null;
+    }
+    state.ui.erro="";
+    render();
+    return;
+  }
+  if(acao==="alternar"){
+    const arr = getPath(state.cadastro, alvo.dataset.campo);
+    const v = alvo.dataset.valor;
+    const i = arr.indexOf(v);
+    if(i===-1) arr.push(v); else arr.splice(i,1);
+    render();
+    return;
+  }
+
+  if(acao==="possui-filhos"){
+    state.ui.possuiFilhos = alvo.dataset.valor==="sim";
+    if(state.ui.possuiFilhos && state.cadastro.membro.filhos.length===0){
+      state.cadastro.membro.filhos.push({nome_completo:"", data_nascimento:""});
+    }
+    if(!state.ui.possuiFilhos) state.cadastro.membro.filhos = [];
+    render();
+    return;
+  }
+  if(acao==="adicionar-filho"){ state.cadastro.membro.filhos.push({nome_completo:"", data_nascimento:""}); render(); return; }
+  if(acao==="remover-filho"){ state.cadastro.membro.filhos.splice(Number(alvo.dataset.indice),1); render(); return; }
+
+  if(acao==="ebd-participa"){
+    state.cadastro.membro.participa_ebd = alvo.dataset.valor==="sim";
+    if(!state.cadastro.membro.participa_ebd) state.cadastro.membro.classe_ebd = null;
+    render();
+    return;
+  }
+
+  if(acao==="foto-abrir-camera"){ document.getElementById("input-camera").click(); return; }
+  if(acao==="foto-abrir-galeria"){ document.getElementById("input-galeria").click(); return; }
+  if(acao==="foto-refazer"){ state.fotoDataUrl=null; state.cadastro.foto=null; render(); setTimeout(()=>document.getElementById("input-camera").click(),50); return; }
+  if(acao==="foto-trocar"){ state.fotoDataUrl=null; state.cadastro.foto=null; render(); setTimeout(()=>document.getElementById("input-galeria").click(),50); return; }
+
+  /* Seletor de data em 3 passos */
+  if(acao==="abrir-data"){ abrirDatePicker(alvo.dataset.campo); return; }
+  if(acao==="dp-overlay-fundo"){ if(ev.target===alvo) fecharDatePicker(); return; }
+  if(acao==="dp-fechar"){ fecharDatePicker(); return; }
+  if(acao==="dp-voltar"){ state.datePicker.sub -= 1; render(); return; }
+  if(acao==="dp-ano"){ state.datePicker.ano = Number(alvo.dataset.valor); state.datePicker.sub = 2; render(); return; }
+  if(acao==="dp-mes"){ state.datePicker.mes = Number(alvo.dataset.valor); state.datePicker.sub = 3; render(); return; }
+  if(acao==="dp-dia"){
+    const dp = state.datePicker;
+    const iso = `${dp.ano}-${String(dp.mes).padStart(2,"0")}-${String(alvo.dataset.valor).padStart(2,"0")}`;
+    setPath(state.cadastro, dp.campo, iso);
+    fecharDatePicker();
+    return;
+  }
+});
+
+document.addEventListener("input", function(ev){
+  const alvo = ev.target;
+  const campo = alvo.dataset && alvo.dataset.campo;
+  if(!campo) return;
+  let valor = alvo.value;
+  const formato = alvo.dataset.formato;
+  if(formato==="cpf"){ alvo.value = formatarCpf(valor); valor = apenasDigitos(valor); }
+  else if(formato==="telefone"){ alvo.value = formatarTelefone(valor); valor = apenasDigitos(valor); }
+  else if(formato==="cep"){ alvo.value = formatarCep(valor); valor = apenasDigitos(valor); }
+  const camposAnulaveis = ["membro.rg","membro.email","membro.endereco.complemento"];
+  setPath(state.cadastro, campo, valor===""&&camposAnulaveis.includes(campo) ? null : valor);
+});
+document.addEventListener("change", function(ev){
+  const alvo = ev.target;
+  const campo = alvo.dataset && alvo.dataset.campo;
+  if(!campo || alvo.tagName!=="SELECT") return;
+  setPath(state.cadastro, campo, alvo.value || null);
+});
+
+/* =========================================================================
+   ENVIO
+   ========================================================================= */
+function removerAcentos(txt){ return txt.normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+function slugificar(txt){
+  return removerAcentos(txt||"membro").trim().replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_+|_+$/g,"") || "membro";
+}
+function baixarJson(objeto, nomeArquivo){
+  const blob = new Blob([JSON.stringify(objeto, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nomeArquivo;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function enviarCadastro(){
+  const btn = document.querySelector('[data-acao="enviar"]');
+  if(btn){ btn.disabled = true; btn.textContent = "Enviando..."; }
+
+  const payload = paraEnvioFirestore(state.cadastro);
+  payload.fotoDataUrl = state.fotoDataUrl || null;
+  // Garante campos administrativos mínimos para a Agenda
+  payload.administrativo = {
+    data_cadastro: new Date().toISOString(),
+    data_atualizacao: new Date().toISOString(),
+    status_interno: "ativo",
+    observacoes_administrativas: null
+  };
+
+  try {
+    // Grava apenas o próprio cadastro (write-only). ID do documento = id gerado no formulário.
+    await setDoc(doc(db, "membros", payload.id), payload);
+    state.nomeArquivoGerado = payload.codigo_exibicao;
+    state.etapa = 9;
+    render();
+  } catch (err) {
+    console.error("Erro ao enviar cadastro:", err);
+    state.ui.erro = "Não foi possível enviar o cadastro. Verifique sua conexão e tente novamente.";
+    if(btn){ btn.disabled = false; btn.textContent = "Enviar cadastro"; }
+    render();
+  }
+}
+
+render();
+})();
+</script>
+</body>
+</html>
