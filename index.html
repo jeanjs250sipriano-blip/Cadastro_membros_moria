@@ -243,16 +243,56 @@ const departamentosCfg = [
   {chave:"midia", rotulo:"Mídia/Comunicação"},
   {chave:"familia", rotulo:"Família"},
 ];
+/* Cargos para exibição completa (inclui formas masculinas e femininas) */
 const cargosCfg = [
   {chave:"nenhum", rotulo:"Nenhum"},
   {chave:"cooperador", rotulo:"Cooperador"},
+  {chave:"cooperadora", rotulo:"Cooperadora"},
   {chave:"diacono", rotulo:"Diácono"},
   {chave:"diaconisa", rotulo:"Diaconisa"},
   {chave:"presbitero", rotulo:"Presbítero"},
+  {chave:"presbitera", rotulo:"Presbítera"},
   {chave:"evangelista", rotulo:"Evangelista"},
   {chave:"pastor", rotulo:"Pastor"},
+  {chave:"pastora", rotulo:"Pastora"},
+  {chave:"missionario", rotulo:"Missionário"},
+  {chave:"missionaria", rotulo:"Missionária"},
+];
+/* Opções de seleção no formulário (neutras, com indicação de gênero) */
+const cargosSelecao = [
+  {chave:"nenhum", rotulo:"Nenhum"},
+  {chave:"cooperador", rotulo:"Cooperador(a)"},
+  {chave:"diacono", rotulo:"Diácono / Diaconisa"},
+  {chave:"presbitero", rotulo:"Presbítero(a)"},
+  {chave:"evangelista", rotulo:"Evangelista"},
+  {chave:"pastor", rotulo:"Pastor(a)"},
   {chave:"missionario", rotulo:"Missionário(a)"},
 ];
+/** Converte a chave neutra do cargo para a forma masculina/feminina conforme o sexo. */
+function aplicarGeneroCargo(chave, sexo){
+  if(!chave || chave==="nenhum" || chave==="evangelista") return chave;
+  if(sexo==="feminino"){
+    const fem = {
+      cooperador:"cooperadora", diacono:"diaconisa", presbitero:"presbitera",
+      pastor:"pastora", missionario:"missionaria"
+    };
+    return fem[chave] || chave;
+  }
+  // masculino (ou sexo ainda não informado): forma masculina
+  const masc = {
+    cooperadora:"cooperador", diaconisa:"diacono", presbitera:"presbitero",
+    pastora:"pastor", missionaria:"missionario"
+  };
+  return masc[chave] || chave;
+}
+/** Mapeia valor já gravado (ex.: pastora) de volta para a chave neutra da seleção. */
+function cargoParaSelecao(chave){
+  const mapa = {
+    cooperadora:"cooperador", diaconisa:"diacono", presbitera:"presbitero",
+    pastora:"pastor", missionaria:"missionario"
+  };
+  return mapa[chave] || chave;
+}
 const estadosCivisCfg = [
   {chave:"solteiro", rotulo:"Solteiro(a)"},
   {chave:"casado", rotulo:"Casado(a)"},
@@ -542,7 +582,7 @@ function etapa6_CargoDepartamentos(m){
     <div class="secao">
       <div class="campo">
         <label>Cargo / função eclesiástica</label>
-        ${grupoCards("membro.cargo_eclesiastico", cargosCfg, m.cargo_eclesiastico)}
+        ${grupoCards("membro.cargo_eclesiastico", cargosSelecao, cargoParaSelecao(m.cargo_eclesiastico))}
       </div>
       <div class="campo">
         <label>Departamentos dos quais participa atualmente</label>
@@ -621,7 +661,7 @@ function etapa8_Revisao(c){
       </div>
       <div class="cartao">
         <div class="revisao-secao"><h3>Cargo / departamentos</h3><button class="editar" data-acao="ir" data-etapa="6">Editar</button></div>
-        ${linha("Cargo", rotulo(cargosCfg, m.cargo_eclesiastico))}
+        ${linha("Cargo", rotulo(cargosCfg, aplicarGeneroCargo(m.cargo_eclesiastico, m.sexo)))}
         ${linha("Departamentos", m.departamentos.map(d=>rotulo(departamentosCfg,d)).join(", "))}
       </div>
       <div class="cartao">
@@ -965,6 +1005,12 @@ function baixarJson(objeto, nomeArquivo){
 async function enviarCadastro(){
   const btn = document.querySelector('[data-acao="enviar"]');
   if(btn){ btn.disabled = true; btn.textContent = "Enviando..."; }
+
+  // Aplica gênero no cargo conforme o sexo selecionado (ex.: pastor → pastora)
+  state.cadastro.membro.cargo_eclesiastico = aplicarGeneroCargo(
+    state.cadastro.membro.cargo_eclesiastico,
+    state.cadastro.membro.sexo
+  );
 
   const payload = paraEnvioFirestore(state.cadastro);
   payload.fotoDataUrl = state.fotoDataUrl || null;
