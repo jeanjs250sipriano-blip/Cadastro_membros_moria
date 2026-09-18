@@ -222,6 +222,42 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* =========================================================================
+   CRIPTOGRAFIA (AES-GCM) — mesmo segredo na Agenda para descriptografar
+   O Firebase só recebe dados embaralhados; a chave não vai para a nuvem.
+   ========================================================================= */
+const CRYPTO_PASSPHRASE = "mm-crypto-v1-MonteMoria-cadastro-2026";
+const CRYPTO_SALT = new TextEncoder().encode("monte-moria-salt-v1");
+
+function bufferParaBase64(buf){
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunk = 0x8000;
+  for(let i=0; i<bytes.length; i+=chunk){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  }
+  return btoa(binary);
+}
+async function derivarChaveCripto(){
+  const baseKey = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(CRYPTO_PASSPHRASE), "PBKDF2", false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name:"PBKDF2", salt:CRYPTO_SALT, iterations:100000, hash:"SHA-256" },
+    baseKey,
+    { name:"AES-GCM", length:256 },
+    false,
+    ["encrypt","decrypt"]
+  );
+}
+async function criptografarObjeto(obj){
+  const chave = await derivarChaveCripto();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(JSON.stringify(obj));
+  const cipherBuf = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, chave, encoded);
+  return { iv: bufferParaBase64(iv), dados: bufferParaBase64(cipherBuf) };
+}
+
 (function(){
 "use strict";
 
@@ -1023,8 +1059,18 @@ async function enviarCadastro(){
   };
 
   try {
-    // Grava apenas o próprio cadastro (write-only). ID do documento = id gerado no formulário.
-    await setDoc(doc(db, "membros", payload.id), payload);
+    // Criptografa o cadastro inteiro antes de enviar (Firebase só recebe dados embaralhados)
+    const { iv, dados } = await criptografarObjeto(payload);
+    const envelope = {
+      id: payload.id,
+      codigo_exibicao: payload.codigo_exibicao,
+      criptografado: true,
+      schema_crypto: "aes-gcm-v1",
+      iv,
+      dados,
+      data_envio: new Date().toISOString()
+    };
+    await setDoc(doc(db, "membros", payload.id), envelope);
     state.nomeArquivoGerado = payload.codigo_exibicao;
     state.etapa = 9;
     render();
