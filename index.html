@@ -198,6 +198,82 @@
   .dp-dia-item:hover, .dp-dia-item:active{border-color:var(--primary); background:var(--primary-tint);}
   .dp-dia-item.desabilitado{opacity:.3; pointer-events:none;}
 
+  /* ===== Histórico local de cadastros ===== */
+  .hist-marca{display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+  .hist-marca .selo{width:40px;height:40px;margin:0;}
+  .hist-marca .selo svg{width:20px;height:20px;}
+  .hist-marca strong{font-family:'Lora',Georgia,serif; font-size:1.05rem;}
+  .hist-aviso{
+    display:flex; gap:10px; align-items:flex-start; padding:13px 14px; margin-bottom:16px;
+    border-radius:var(--radius-md); font-size:.9rem; line-height:1.45;
+    background:var(--primary-tint); color:var(--primary-dark); border:1px solid #cfdccf;
+  }
+  .hist-aviso svg{width:20px;height:20px;flex-shrink:0;stroke:currentColor;margin-top:1px;}
+  .hist-aviso.atencao{background:#fbf1e4; color:#7a5127; border-color:#ecd5b4;}
+  .hist-novo{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin:18px 0 24px; box-shadow:0 8px 18px -10px rgba(42,71,50,.6);
+  }
+  .hist-novo svg{width:18px;height:18px;stroke:#fff;}
+  .hist-subtitulo{
+    font-size:.76rem; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;
+  }
+  .hist-lista{display:flex; flex-direction:column; gap:10px;}
+  .hist-card{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:12px;
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow); font-family:inherit; color:var(--ink); cursor:pointer;
+  }
+  .hist-card:active{background:var(--primary-tint);}
+  .hist-avatar{
+    width:54px; height:54px; border-radius:50%; object-fit:cover; flex-shrink:0;
+    background:var(--primary-tint); border:2px solid var(--primary-tint);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:1.1rem; color:var(--primary);
+  }
+  .hist-avatar.grande{width:76px; height:76px; font-size:1.4rem;}
+  .hist-info{flex:1; min-width:0;}
+  .hist-nome{font-weight:600; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .hist-data{font-size:.8rem; color:var(--muted); margin-top:2px;}
+  .hist-status{
+    display:inline-flex; align-items:center; gap:5px; margin-top:7px;
+    font-size:.74rem; font-weight:600; color:var(--primary-dark);
+    background:var(--primary-tint); padding:3px 9px; border-radius:99px;
+  }
+  .hist-status svg{width:12px;height:12px;stroke:var(--primary);}
+  .hist-seta{width:18px; height:18px; stroke:var(--muted); flex-shrink:0;}
+  .hist-vazio{
+    text-align:center; padding:28px 16px; color:var(--muted); font-size:.92rem;
+    border:1.5px dashed var(--line); border-radius:var(--radius-lg); background:var(--card);
+  }
+  .hist-rodape-info{font-size:.78rem; color:var(--muted); text-align:center; margin-top:22px; line-height:1.5;}
+  /* Detalhe (somente leitura) */
+  .hist-painel{max-height:92vh;}
+  .hist-identidade{display:flex; align-items:center; gap:14px; margin-bottom:14px;}
+  .hist-somente{
+    font-size:.82rem; line-height:1.45; color:var(--muted); background:var(--card);
+    border:1px solid var(--line); border-radius:var(--radius-md); padding:10px 12px; margin-bottom:14px;
+  }
+  .hist-painel .cartao{padding:14px 16px; margin-bottom:12px; box-shadow:none;}
+  .hist-painel .cartao h3{font-size:.95rem; margin-bottom:4px;}
+  .hist-rodape{
+    border-top:1px solid var(--line); padding-top:14px; margin-top:6px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .hist-rodape-botoes{display:flex; gap:10px;}
+  .hist-rodape-botoes .btn{flex:1; padding:13px 8px;}
+  .hist-rodape .ajuda{text-align:center; margin-top:0;}
+  .btn-perigo{background:var(--card); color:var(--danger); border-color:#e6c4bc;}
+  .btn-perigo-cheio{background:var(--danger); color:#fff;}
+  .hist-confirma{
+    background:#fbeeea; border:1px solid #e6c4bc; border-radius:var(--radius-md);
+    padding:14px; font-size:.88rem; line-height:1.5; color:var(--ink);
+  }
+  .hist-confirma strong{display:block; margin-bottom:4px; color:var(--danger);}
+  .hist-confirma-botoes{display:flex; gap:10px; margin-top:12px;}
+  .hist-confirma-botoes .btn{flex:1; padding:13px 8px;}
+
   @media (min-width:520px){
     #app{border-left:1px solid var(--line); border-right:1px solid var(--line);}
   }
@@ -407,15 +483,97 @@ function paraEnvioFirestore(c){
 }
 
 /* =========================================================================
+   HISTÓRICO LOCAL (localStorage)
+   Chave:  mm_historico_v1  →  array JSON, do mais recente para o mais antigo.
+   Item:   { versao, id, codigo_exibicao, data_envio, nome, miniatura, membro }
+     - miniatura: JPEG 200x200 em dataURL (ou null)  → leve, não estoura a cota
+     - membro:    cópia do objeto `membro` enviado (somente leitura na UI)
+   Nada aqui é enviado ao banco de dados; é apenas uma cópia local para consulta.
+   ========================================================================= */
+const Historico = (function(){
+  const CHAVE = "mm_historico_v1";
+  function listar(){
+    try{
+      const lista = JSON.parse(localStorage.getItem(CHAVE) || "[]");
+      return Array.isArray(lista) ? lista.filter(r => r && r.id && r.membro) : [];
+    }catch(e){ return []; }
+  }
+  function salvarLista(lista){
+    try{ localStorage.setItem(CHAVE, JSON.stringify(lista)); return true; }
+    catch(e){ return false; }
+  }
+  function adicionar(reg){
+    const lista = listar().filter(r => r.id !== reg.id);
+    lista.unshift(reg);
+    if(salvarLista(lista)) return true;
+    lista[0] = Object.assign({}, reg, { miniatura:null });   // cota cheia: tenta sem a foto
+    return salvarLista(lista);
+  }
+  function obter(id){ return listar().find(r => r.id === id) || null; }
+  function remover(id){ return salvarLista(listar().filter(r => r.id !== id)); }
+  return { listar, adicionar, obter, remover };
+})();
+
+function esc(v){
+  return String(v==null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function dataHoraBr(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return "";
+  return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+}
+function iniciais(nome){
+  const p = (nome||"").trim().split(/\s+/).filter(Boolean);
+  return ((p[0]||"?")[0] + (p.length>1 ? p[p.length-1][0] : "")).toUpperCase();
+}
+/** Gera uma miniatura quadrada (recorte central) a partir da foto já comprimida. */
+function gerarMiniatura(dataUrl, lado){
+  lado = lado || 200;
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = function(){
+      try{
+        const c = document.createElement("canvas");
+        c.width = lado; c.height = lado;
+        const corte = Math.min(img.width, img.height);
+        c.getContext("2d").drawImage(img, (img.width-corte)/2, (img.height-corte)/2, corte, corte, 0, 0, lado, lado);
+        resolve(c.toDataURL("image/jpeg", 0.72));
+      }catch(e){ resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+/** Guarda a cópia local após envio bem-sucedido. Nunca lança erro: falha aqui não afeta o envio. */
+async function registrarNoHistorico(payload){
+  try{
+    const miniatura = state.fotoDataUrl ? await gerarMiniatura(state.fotoDataUrl) : null;
+    return Historico.adicionar({
+      versao: 1,
+      id: payload.id,
+      codigo_exibicao: payload.codigo_exibicao,
+      data_envio: new Date().toISOString(),
+      nome: payload.membro.nome_completo,
+      miniatura,
+      membro: JSON.parse(JSON.stringify(payload.membro))
+    });
+  }catch(e){
+    console.warn("Não foi possível gravar o histórico local:", e);
+    return false;
+  }
+}
+
+/* =========================================================================
    ESTADO
    ========================================================================= */
 const state = {
-  etapa: 0,
+  etapa: Historico.listar().length ? 10 : 0,   // 10 = histórico local · 0 = abertura do cadastro
   cadastro: criarCadastroVazio(),
   ui: { possuiFilhos:false, erro:"" },
   fotoDataUrl: null,
   nomeArquivoGerado: "",
-  datePicker: { ativo:false, campo:null, sub:1, ano:null, mes:null }
+  datePicker: { ativo:false, campo:null, sub:1, ano:null, mes:null },
+  historico: { detalheId:null, confirmando:false, banner:null }
 };
 const TOTAL_ETAPAS = 8; // 1 Dados pessoais+família · 2 Contato · 3 Endereço · 4 Vida eclesiástica · 5 EBD · 6 Cargo/Departamentos · 7 Foto · 8 Revisão
 
@@ -707,14 +865,157 @@ function etapa8_Revisao(c){
     </div>`;
 }
 
-function telaSucesso(){
+/* =========================================================================
+   TELAS DO HISTÓRICO (substitui a antiga tela de sucesso)
+   ========================================================================= */
+const ICONE_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+const ICONE_MAIS  = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
+const ICONE_SETA  = `<svg class="hist-seta" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`;
+
+function avatarHtml(reg, classe){
+  return reg.miniatura
+    ? `<img class="${classe}" src="${esc(reg.miniatura)}" alt="">`
+    : `<div class="${classe}">${esc(iniciais(reg.nome))}</div>`;
+}
+
+function cardHistorico(reg){
   return `
-  <div class="tela-sucesso">
-    <div class="selo"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg></div>
-    <h1>Cadastro concluído</h1>
-    <p>Seus dados foram enviados com sucesso para a Congregação Monte Moriá. A administração receberá seu cadastro automaticamente.</p>
-    ${state.nomeArquivoGerado ? `<p style="margin-top:12px;font-size:.85rem">Código: <strong>${state.cadastro.codigo_exibicao}</strong></p>` : ""}
+  <button type="button" class="hist-card" data-acao="hist-abrir" data-id="${esc(reg.id)}">
+    ${avatarHtml(reg, "hist-avatar")}
+    <div class="hist-info">
+      <div class="hist-nome">${esc(reg.nome || "Sem nome")}</div>
+      <div class="hist-data">${esc(dataHoraBr(reg.data_envio))}</div>
+      <span class="hist-status">${ICONE_CHECK} Enviado com sucesso</span>
+    </div>
+    ${ICONE_SETA}
+  </button>`;
+}
+
+function telaHistorico(){
+  const lista = Historico.listar();
+  const b = state.historico.banner;
+  const banner = b ? `
+    <div class="hist-aviso ${b.tipo==="atencao" ? "atencao" : ""}" role="status">
+      ${ICONE_CHECK}<div>${esc(b.texto)}</div>
+    </div>` : "";
+  const corpoLista = lista.length ? `
+    <div class="hist-subtitulo">${lista.length} ${lista.length===1 ? "cadastro" : "cadastros"} neste dispositivo</div>
+    <div class="hist-lista">${lista.map(cardHistorico).join("")}</div>
+    <p class="hist-rodape-info">Esta lista fica guardada apenas neste aparelho.<br>Toque em um cadastro para consultar os dados enviados.</p>`
+    : `<div class="hist-vazio">Nenhum cadastro guardado neste dispositivo.</div>`;
+
+  return `
+  <div class="hist-tela">
+    <div class="hist-marca">
+      <div class="selo"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-7h6v7"/></svg></div>
+      <strong>Monte Moriá</strong>
+    </div>
+    ${banner}
+    <h1>Cadastros realizados neste dispositivo</h1>
+    <p>Quer cadastrar seu cônjuge, filhos ou outro familiar? Comece um novo cadastro abaixo.</p>
+    <button type="button" class="btn btn-primario hist-novo" data-acao="novo-cadastro">${ICONE_MAIS} Novo cadastro</button>
+    ${corpoLista}
   </div>`;
+}
+
+/* Modal de detalhe — SOMENTE LEITURA: sem edição e sem reenvio. */
+function renderDetalheHistorico(){
+  const h = state.historico;
+  if(!h.detalheId) return "";
+  const reg = Historico.obter(h.detalheId);
+  if(!reg) return "";
+
+  const m = reg.membro;
+  const e = m.endereco || {};
+  const lin = (rot, val) => `<div class="revisao-linha"><span class="rot">${rot}:</span> ${val ? esc(val) : "—"}</div>`;
+  const simNao = {sim:"Sim", nao:"Não", nao_sei:"Não sei / não lembro"};
+  const precisao = {exata:"exata", aproximada:"aproximada", desconhecida:"não sei"};
+  const inicioCongr = (m.data_inicio_congregacao_precisao!=="desconhecida" && m.data_inicio_congregacao)
+    ? `${dataIsoParaBr(m.data_inicio_congregacao)} (${precisao[m.data_inicio_congregacao_precisao]||""})` : "Não sei";
+  const filhos = (m.filhos||[]).length
+    ? m.filhos.map(f => `${f.nome_completo}${f.data_nascimento ? " — " + dataIsoParaBr(f.data_nascimento) : ""}`).join("; ")
+    : "Nenhum";
+  const cartao = (titulo, linhas) => `<div class="cartao"><h3>${titulo}</h3>${linhas}</div>`;
+
+  const rodape = h.confirmando ? `
+    <div class="hist-confirma">
+      <strong>Excluir do histórico deste dispositivo?</strong>
+      Isso remove apenas a cópia guardada neste aparelho. O cadastro já enviado à igreja <b>não é afetado</b>.
+      <div class="hist-confirma-botoes">
+        <button type="button" class="btn btn-secundario" data-acao="hist-excluir-cancelar">Cancelar</button>
+        <button type="button" class="btn btn-perigo-cheio" data-acao="hist-excluir-confirmar">Sim, excluir</button>
+      </div>
+    </div>` : `
+    <div class="hist-rodape-botoes">
+      <button type="button" class="btn btn-perigo" data-acao="hist-excluir">Excluir do histórico</button>
+      <button type="button" class="btn btn-secundario" data-acao="hist-fechar">Fechar</button>
+    </div>
+    <div class="ajuda">Remove só a cópia deste aparelho. O envio à igreja não é afetado.</div>`;
+
+  return `
+  <div class="dp-overlay" data-acao="hist-overlay-fundo">
+    <div class="dp-painel hist-painel" role="dialog" aria-modal="true" aria-label="Cadastro enviado">
+      <div class="dp-cabecalho">
+        <span style="width:32px"></span>
+        <span class="dp-titulo">Cadastro enviado</span>
+        <button data-acao="hist-fechar" aria-label="Fechar">×</button>
+      </div>
+      <div class="dp-corpo">
+        <div class="hist-identidade">
+          ${avatarHtml(reg, "hist-avatar grande")}
+          <div class="hist-info">
+            <div class="hist-nome" style="white-space:normal">${esc(reg.nome)}</div>
+            <div class="hist-data">Código ${esc(reg.codigo_exibicao)}</div>
+            <div class="hist-data">${esc(dataHoraBr(reg.data_envio))}</div>
+            <span class="hist-status">${ICONE_CHECK} Enviado com sucesso</span>
+          </div>
+        </div>
+        <div class="hist-somente">Somente leitura. Este cadastro já foi enviado à igreja e não pode ser editado nem reenviado por aqui.</div>
+        ${cartao("Dados pessoais",
+          lin("Nome", m.nome_completo) +
+          lin("Nascimento", dataIsoParaBr(m.data_nascimento)) +
+          lin("Sexo", m.sexo==="masculino" ? "Masculino" : m.sexo==="feminino" ? "Feminino" : "") +
+          lin("CPF", m.cpf ? formatarCpf(m.cpf) : "") +
+          lin("RG", m.rg) +
+          lin("Estado civil", rotulo(estadosCivisCfg, m.estado_civil)) +
+          (m.estado_civil==="casado" ? lin("Cônjuge", m.nome_conjuge) : "") +
+          lin("Filhos", filhos))}
+        ${cartao("Contato",
+          lin("Telefone", m.telefone ? formatarTelefone(m.telefone) : "") +
+          lin("E-mail", m.email))}
+        ${cartao("Endereço",
+          lin("CEP", e.cep ? formatarCep(e.cep) : "") +
+          lin("Rua", [e.logradouro, e.numero].filter(Boolean).join(", ")) +
+          lin("Complemento", e.complemento) +
+          lin("Bairro", e.bairro) +
+          lin("Cidade/UF", [e.cidade, e.uf].filter(Boolean).join(" / ")))}
+        ${cartao("Vida eclesiástica",
+          lin("Status", m.status==="membro" ? "Membro" : m.status==="congregado" ? "Congregado" : "") +
+          lin("Começou a congregar", inicioCongr) +
+          lin("Batizado nas águas", simNao[m.batizado_nas_aguas]) +
+          (m.batizado_nas_aguas==="sim" ? lin("Data do batismo", dataIsoParaBr(m.data_batismo)) : ""))}
+        ${cartao("Escola Bíblica Dominical",
+          lin("Participa", m.participa_ebd ? "Sim" : "Não") +
+          (m.participa_ebd ? lin("Classe", rotulo(classesEbd, m.classe_ebd)) : ""))}
+        ${cartao("Cargo e departamentos",
+          lin("Cargo", rotulo(cargosCfg, m.cargo_eclesiastico)) +
+          lin("Departamentos", (m.departamentos||[]).map(d => rotulo(departamentosCfg, d)).join(", ")))}
+      </div>
+      <div class="hist-rodape">${rodape}</div>
+    </div>
+  </div>`;
+}
+
+/** Zera o estado do formulário (novo ID!) para um cadastro limpo — ex.: cônjuge, filhos, parentes. */
+function iniciarNovoCadastro(){
+  state.cadastro = criarCadastroVazio();
+  state.fotoDataUrl = null;
+  state.nomeArquivoGerado = "";
+  state.ui = { possuiFilhos:false, erro:"" };
+  state.datePicker = { ativo:false, campo:null, sub:1, ano:null, mes:null };
+  state.historico = { detalheId:null, confirmando:false, banner:null };
+  state.etapa = 1;
+  render(); window.scrollTo(0,0);
 }
 
 /* =========================================================================
@@ -841,16 +1142,19 @@ function render(){
     case 6: corpo = etapa6_CargoDepartamentos(c.membro); break;
     case 7: corpo = etapa7_Foto(); break;
     case 8: corpo = etapa8_Revisao(c); break;
-    case 9: corpo = telaSucesso(); mostrarNav=false; mostrarProgresso=false; break;
+    case 10: corpo = telaHistorico(); mostrarNav=false; mostrarProgresso=false; break;
   }
 
   const pct = state.etapa>=1 && state.etapa<=TOTAL_ETAPAS ? Math.round((state.etapa/TOTAL_ETAPAS)*100) : (state.etapa>TOTAL_ETAPAS?100:0);
 
   const navHtml = mostrarNav ? `
     <div class="nav-botoes">
-      ${state.etapa>1 ? `<button class="btn btn-secundario" data-acao="voltar">Voltar</button>` : `<div></div>`}
+      ${state.etapa>1 ? `<button class="btn btn-secundario" data-acao="voltar">Voltar</button>` : (Historico.listar().length ? `<button class="btn btn-secundario" data-acao="hist-ir">Histórico</button>` : `<div></div>`)}
       <button class="btn btn-primario" data-acao="${state.etapa===TOTAL_ETAPAS?'enviar':'continuar'}">${state.etapa===TOTAL_ETAPAS?'Enviar cadastro':'Continuar'}</button>
     </div>` : "";
+
+  const detalheHtml = renderDetalheHistorico();
+  document.body.style.overflow = detalheHtml ? "hidden" : "";
 
   app.innerHTML = `
     ${mostrarProgresso ? `
@@ -864,6 +1168,7 @@ function render(){
       ${navHtml}
     </main>
     ${renderDatePickerModal()}
+    ${detalheHtml}
   `;
 
   if(state.etapa===3){
@@ -944,6 +1249,23 @@ document.addEventListener("click", function(ev){
     return;
   }
   if(acao==="enviar"){ enviarCadastro(); return; }
+
+  /* Histórico local */
+  if(acao==="novo-cadastro"){ iniciarNovoCadastro(); return; }
+  if(acao==="hist-ir"){ state.etapa = 10; state.ui.erro=""; render(); window.scrollTo(0,0); return; }
+  if(acao==="hist-abrir"){ state.historico.detalheId = alvo.dataset.id; state.historico.confirmando = false; render(); return; }
+  if(acao==="hist-overlay-fundo"){ if(ev.target===alvo){ state.historico.detalheId=null; state.historico.confirmando=false; render(); } return; }
+  if(acao==="hist-fechar"){ state.historico.detalheId=null; state.historico.confirmando=false; render(); return; }
+  if(acao==="hist-excluir"){ state.historico.confirmando = true; render(); return; }
+  if(acao==="hist-excluir-cancelar"){ state.historico.confirmando = false; render(); return; }
+  if(acao==="hist-excluir-confirmar"){
+    Historico.remover(state.historico.detalheId);   // remove só do localStorage; nada vai ao banco
+    state.historico = { detalheId:null, confirmando:false, banner:null };
+    // Sem registros restantes → volta ao fluxo padrão de cadastro
+    if(!Historico.listar().length){ iniciarNovoCadastro(); state.etapa = 0; render(); window.scrollTo(0,0); return; }
+    render();
+    return;
+  }
 
   if(acao==="selecionar"){
     setPath(state.cadastro, alvo.dataset.campo, alvo.dataset.valor);
@@ -1072,8 +1394,18 @@ async function enviarCadastro(){
     };
     await setDoc(doc(db, "membros", payload.id), envelope);
     state.nomeArquivoGerado = payload.codigo_exibicao;
-    state.etapa = 9;
-    render();
+
+    // Envio concluído → guarda cópia local e abre o histórico
+    const salvouLocal = await registrarNoHistorico(payload);
+    const primeiroNome = (payload.membro.nome_completo || "").trim().split(/\s+/)[0];
+    state.historico = {
+      detalheId: null, confirmando: false,
+      banner: salvouLocal
+        ? { tipo:"ok", texto:`Cadastro de ${primeiroNome} enviado com sucesso para a Congregação Monte Moriá (código ${payload.codigo_exibicao}).` }
+        : { tipo:"atencao", texto:"Cadastro enviado com sucesso, mas não foi possível guardá-lo no histórico deste dispositivo." }
+    };
+    state.etapa = 10;
+    render(); window.scrollTo(0,0);
   } catch (err) {
     console.error("Erro ao enviar cadastro:", err);
     state.ui.erro = "Não foi possível enviar o cadastro. Verifique sua conexão e tente novamente.";
